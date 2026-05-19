@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 import re
+import shutil
 import click
 import questionary
 from pathlib import Path
@@ -144,20 +145,27 @@ class FastApiCli():
 
   def new_project(self, name, nodatabase=False):
     path = Path.cwd()
-    estructure = questionary.rawselect("Tipo de estructura: ", self.options_esctructure).ask()
+    project_path = Path(name)
     
-    db_engine = None
-    if not nodatabase:
-      db_engine = questionary.select("¿Qué motor de base de datos usarás?", self.db_engines).ask()
-    
-    if estructure:
+    try:
+      estructure = questionary.rawselect("Tipo de estructura: ", self.options_esctructure).ask()
+      if estructure is None:
+        click.secho("\nCreación cancelada.", fg="yellow")
+        return
+      
+      db_engine = None
+      if not nodatabase:
+        db_engine = questionary.select("¿Qué motor de base de datos usarás?", self.db_engines).ask()
+        if db_engine is None:
+          click.secho("\nCreación cancelada.", fg="yellow")
+          return
+      
       index = self.options_esctructure.index(estructure)
       match index:
         case 0:
           self.layers_estructure(name, db_engine=db_engine)
       click.secho(f"Creando proyecto en: {path}")
       
-      project_path = Path(name)
       project_path.mkdir(parents=True, exist_ok=True)
       
       # requirements.txt
@@ -172,20 +180,21 @@ class FastApiCli():
       req_file.write_text("".join(requirements))
       
       # .env
-      env_file = project_path / ".env"
-      click.secho(f"Creando archivo: {env_file}")
-      if db_engine:
-        env_file.write_text(f"DBHOST={self.db_urls[db_engine]}\n")
-      else:
-        env_file.write_text("# Sin base de datos configurada\n")
-      
-      # .env.example (template)
-      env_example_file = project_path / ".env.example"
-      click.secho(f"Creando archivo: {env_example_file}")
-      if db_engine:
-        env_example_file.write_text(f"DBHOST={self.db_urls[db_engine]}\n")
-      else:
-        env_example_file.write_text("# DBHOST=sqlite:///./database.db\n")
+      if not nodatabase:
+        env_file = project_path / ".env"
+        click.secho(f"Creando archivo: {env_file}")
+        if db_engine:
+          env_file.write_text(f"DBHOST={self.db_urls[db_engine]}\n")
+        else:
+          env_file.write_text("# Sin base de datos configurada\n")
+        
+        # .env.example (template)
+        env_example_file = project_path / ".env.example"
+        click.secho(f"Creando archivo: {env_example_file}")
+        if db_engine:
+          env_example_file.write_text(f"DBHOST={self.db_urls[db_engine]}\n")
+        else:
+          env_example_file.write_text("# DBHOST=sqlite:///./database.db\n")
       
       # .gitignore
       gitignore_file = project_path / ".gitignore"
@@ -222,6 +231,13 @@ class FastApiCli():
       # Git init
       click.secho("Inicializando repositorio Git...", fg="green")
       subprocess.run(["git", "init", str(project_path)])
+
+    except KeyboardInterrupt:
+      click.secho("\n\nCreación cancelada por el usuario.", fg="yellow")
+      if project_path.exists():
+        click.secho(f"Eliminando carpeta parcial: {project_path}...", fg="yellow")
+        shutil.rmtree(project_path)
+        click.secho("Limpieza completada.", fg="yellow")
 
 
   def layers_estructure(self, name, db_engine=None):
