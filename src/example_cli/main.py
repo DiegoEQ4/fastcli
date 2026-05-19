@@ -25,13 +25,14 @@ def group_root():
 
 @click.command()
 @click.argument("name")
-def new(name):
+@click.option("--nodatabase", is_flag=True, default=False, help="No configurar base de datos.")
+def new(name, nodatabase):
   """Genera un nuevo proyecto con las siguientes opciones
   """
   lenguaje = questionary.select("¿Que marco de trabajo ocuparas?",options_lenguajes).ask()
   match lenguaje:
     case "FastAPI":
-      fastapicli.new_project(name)
+      fastapicli.new_project(name, nodatabase=nodatabase)
   return lenguaje
 
 
@@ -44,9 +45,15 @@ def hello():
 def bye(name):
   print(f"Adios {name}!")
 
+@click.command()
+@click.argument('name')
+def module(name):
+  """Genera un nuevo módulo con sus capas (models, service, routes)."""
+  fastapicli.generate_module(name)
 
 group_root.add_command(new)
 group_root.add_command(bye)
+group_root.add_command(module)
 
 if __name__ == '__main__':
   group_root()
