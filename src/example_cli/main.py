@@ -26,6 +26,8 @@ def group_root():
 @click.command()
 @click.argument("name")
 def new(name):
+  """Genera un nuevo proyecto con las siguientes opciones
+  """
   lenguaje = questionary.select("¿Que marco de trabajo ocuparas?",options_lenguajes).ask()
   match lenguaje:
     case "FastAPI":
