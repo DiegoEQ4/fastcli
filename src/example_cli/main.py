@@ -2,7 +2,6 @@ import click
 import os
 import questionary
 
-from .questions import Questions
 from .fastapi import FastApiCli
 from pathlib import Path
 
