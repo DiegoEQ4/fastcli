@@ -5,9 +5,6 @@ import questionary
 from .fastapi import FastApiCli
 from pathlib import Path
 
-
-
-question = Questions()
 fastapicli = FastApiCli()
 
 
