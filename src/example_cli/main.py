@@ -7,6 +7,7 @@ from pathlib import Path
 
 fastapicli = FastApiCli()
 
+from .banner import print_banner
 
 options_lenguajes = [
   "FastAPI",
@@ -25,6 +26,7 @@ def group_root():
 def new(name, nodatabase):
   """Genera un nuevo proyecto con las siguientes opciones
   """
+  print_banner("FASTCLI")
   lenguaje = questionary.select("¿Que marco de trabajo ocuparas?",options_lenguajes).ask()
   match lenguaje:
     case "FastAPI":
