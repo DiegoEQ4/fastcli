@@ -1,26 +1,38 @@
 [project]
-name = "example-cli"
+name = "fastcli"
 version = "0.1.0"
-description = ""
+description = "CLI para generar proyectos FastAPI con plantillas y utilidades"
 authors = [
-    {name = "Diego Escobar",email = "luisdiego.escobar@salud.gob.sv"}
+    {name = "Diego Escobar", email = "ldiegoeq909@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "click (>=8.3.3,<9.0.0)",
-    "questionary (>=2.1.1,<3.0.0)"
+    "click>=8.3.3,<9.0.0",
+    "questionary>=2.1.1,<3.0.0",
+    "pytest (>=9.0.3,<10.0.0)"
+]
+license = { text = "MIT" }
+keywords = ["cli", "fastapi", "generator"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3.12",
 ]
 
+[project.urls]
+Repository = "https://github.com/DiegoEQ4/fastcli"
+Documentation = "https://github.com/DiegoEQ4/fastcli#readme"
+
 [project.scripts]
-fastcli = "example_cli.main:group_root"
+fastcli = "fastcli.main:group_root"
 
 [tool.poetry]
-packages = [{include = "example_cli", from = "src"}]
+packages = [{include = "fastcli", from = "src"}]
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.scripts]
-fastcli = "example_cli.main:group_root"
+# scripts are defined under PEP 621 [project.scripts]

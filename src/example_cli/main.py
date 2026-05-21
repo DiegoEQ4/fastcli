@@ -33,10 +33,6 @@ def new(name, nodatabase):
 
 
 @click.command()
-def hello():
-  question.presentation()
-
-@click.command()
 @click.argument('name')
 def bye(name):
   print(f"Adios {name}!")

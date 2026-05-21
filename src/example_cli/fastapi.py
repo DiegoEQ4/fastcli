@@ -40,8 +40,19 @@ class FastApiCli():
     "MySQL": "pymysql"
   }
 
-  def __self__():
+  def __init__(self):
     pass
+
+  def validate_name(self, name: str) -> bool:
+    """Valida que el nombre sea un identificador válido para módulos/proyectos (snake_case)."""
+    pattern = r'^[a-z_][a-z0-9_]*$'
+    if not re.match(pattern, name):
+      click.secho(f"Error: '{name}' no es un nombre válido. Use snake_case, sin espacios ni caracteres especiales.", fg="red")
+      return False
+    if name.isdigit():
+      click.secho("Error: El nombre no puede ser solo números.", fg="red")
+      return False
+    return True
 
   def is_valid_project(self) -> bool:
     app_dir = Path.cwd() / "app"
@@ -49,6 +60,8 @@ class FastApiCli():
     return app_dir.exists() and main_file.exists()
 
   def generate_module(self, module_name: str):
+    if not self.validate_name(module_name):
+      return
     if not self.is_valid_project():
       click.secho("Error: No estás en la raíz de un proyecto FastAPI válido (no se encontró app/main.py).", fg="red")
       return
@@ -200,6 +213,10 @@ class FastApiCli():
           click.secho("\nCreación cancelada.", fg="yellow")
           return
           
+      if not self.validate_name(name):
+        click.secho("Creación cancelada: nombre inválido.", fg="yellow")
+        return
+
       index = self.options_esctructure.index(estructure)
       if index == 0:
         use_schemas = questionary.confirm("¿Deseas incluir la capa de schemas?").ask()
@@ -266,7 +283,10 @@ class FastApiCli():
       # Entorno virtual
       venv_path = project_path / ".venv"
       click.secho(f"Creando entorno virtual en: {venv_path}...", fg="green")
-      subprocess.run([sys.executable, "-m", "venv", str(venv_path)])
+      try:
+        subprocess.run([sys.executable, "-m", "venv", str(venv_path)], check=True)
+      except Exception as e:
+        click.secho(f"Advertencia: fallo creando venv: {e}", fg="yellow")
 
       click.secho("Instalando dependencias en el entorno virtual...", fg="green")
       if os.name == 'nt':
@@ -274,11 +294,17 @@ class FastApiCli():
       else:
           pip_exe = venv_path / "bin" / "pip"
 
-      subprocess.run([str(pip_exe), "install", "-r", str(req_file)])
+      try:
+        subprocess.run([str(pip_exe), "install", "-r", str(req_file)], check=True)
+      except Exception as e:
+        click.secho(f"Advertencia: fallo instalando dependencias: {e}", fg="yellow")
       
       # Git init
       click.secho("Inicializando repositorio Git...", fg="green")
-      subprocess.run(["git", "init", str(project_path)])
+      try:
+        subprocess.run(["git", "init", str(project_path)], check=True)
+      except Exception:
+        click.secho("Advertencia: git no disponible o fallo inicializando repositorio.", fg="yellow")
 
     except KeyboardInterrupt:
       click.secho("\n\nCreación cancelada por el usuario.", fg="yellow")
