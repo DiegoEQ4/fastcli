@@ -102,13 +102,22 @@ class FastApiCli():
       
     if not models_file.exists():
       class_name = module_name.capitalize()
-      models_file.write_text(
-        f"from typing import Optional\n"
-        f"from sqlmodel import Field, SQLModel\n\n"
-        f"class {class_name}(SQLModel, table=True):\n"
-        f"    id: Optional[int] = Field(default=None, primary_key=True)\n"
-        f"    name: str\n"
-      )
+      if (app_dir / "db.py").exists():
+        models_file.write_text(
+          f"from typing import Optional\n"
+          f"from sqlmodel import Field, SQLModel\n\n"
+          f"class {class_name}(SQLModel, table=True):\n"
+          f"    id: Optional[int] = Field(default=None, primary_key=True)\n"
+          f"    name: str\n"
+        )
+      else:
+        models_file.write_text(
+          f"from typing import Optional\n"
+          f"from pydantic import BaseModel\n\n"
+          f"class {class_name}(BaseModel):\n"
+          f"    id: Optional[int] = None\n"
+          f"    name: str\n"
+        )
       click.secho(f"Creado: {models_file}", fg="green")
 
     # Service
@@ -339,14 +348,14 @@ class FastApiCli():
       main_content = (
         "from contextlib import asynccontextmanager\n"
         "from fastapi import FastAPI\n"
-        "from app.routes import user_routes\n"
+        "from app.routes import user_route\n"
         "from app.db import create_all_tables\n\n"
         "@asynccontextmanager\n"
         "async def lifespan(app: FastAPI):\n"
         "    create_all_tables()\n"
         "    yield\n\n"
         "app = FastAPI(lifespan=lifespan)\n\n"
-        "app.include_router(user_routes.router)\n\n"
+        "app.include_router(user_route.router)\n\n"
         "@app.get('/')\n"
         "def read_root():\n"
         "    return {'Hello': 'World'}\n"
@@ -375,9 +384,9 @@ class FastApiCli():
     else:
       main_content = (
         "from fastapi import FastAPI\n"
-        "from app.routes import user_routes\n\n"
+        "from app.routes import user_route\n\n"
         "app = FastAPI()\n\n"
-        "app.include_router(user_routes.router)\n\n"
+        "app.include_router(user_route.router)\n\n"
         "@app.get('/')\n"
         "def read_root():\n"
         "    return {'Hello': 'World'}\n"
@@ -406,13 +415,22 @@ class FastApiCli():
       )
 
     models_file = app_path / models_layer / f"user_{models_suffix}.py"
-    models_file.write_text(
-        "from typing import Optional\n"
-        "from sqlmodel import Field, SQLModel\n\n"
-        "class User(SQLModel, table=True):\n"
-        "    id: Optional[int] = Field(default=None, primary_key=True)\n"
-        "    name: str\n"
-    )
+    if db_engine:
+      models_file.write_text(
+          "from typing import Optional\n"
+          "from sqlmodel import Field, SQLModel\n\n"
+          "class User(SQLModel, table=True):\n"
+          "    id: Optional[int] = Field(default=None, primary_key=True)\n"
+          "    name: str\n"
+      )
+    else:
+      models_file.write_text(
+          "from typing import Optional\n"
+          "from pydantic import BaseModel\n\n"
+          "class User(BaseModel):\n"
+          "    id: Optional[int] = None\n"
+          "    name: str\n"
+      )
 
     service_file = app_path / services_layer / f"user_{services_suffix}.py"
     if use_schemas:
